@@ -78,6 +78,14 @@
           "default": true,
           "description": "Показывать панель Kawaii при реакции, если она скрыта."
         },
+        "kawaiiError.phrases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Свои реплики для облачка. Пусто — встроенные («Хозяин, ошибка!» и др.)."
+        },
         "kawaiiError.detectors.diagnostics": {
           "type": "boolean",
           "default": true,
@@ -144,7 +152,9 @@
     "watch": "node esbuild.js --watch",
     "package:bundle": "npm run check-types && npm run lint && node esbuild.js --production",
     "check-types": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "compile-tests": "rm -rf out-test && tsc -p tsconfig.test.json",
+    "test": "npm run compile-tests && node --test \"out-test/test/**/*.test.js\""
   },
   "devDependencies": {
     "@types/node": "^20.19.43",

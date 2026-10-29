@@ -8,6 +8,7 @@ export interface KawaiiConfig {
   cooldownSeconds: number;
   displayDuration: number;
   revealPanel: boolean;
+  phrases: string[];
   detectors: {
     diagnostics: boolean;
     tasks: boolean;
@@ -32,6 +33,7 @@ export function readConfig(): KawaiiConfig {
     cooldownSeconds: Math.max(0, c.get('cooldownSeconds', 10)),
     displayDuration: Math.max(1, c.get('displayDuration', 6)),
     revealPanel: c.get('revealPanel', true),
+    phrases: c.get<unknown[]>('phrases', []).filter((p): p is string => typeof p === 'string'),
     detectors: {
       diagnostics: c.get('detectors.diagnostics', true),
       tasks: c.get('detectors.tasks', true),

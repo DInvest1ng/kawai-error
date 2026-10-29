@@ -24,7 +24,8 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   private ready = false;
   /** Only the latest reaction is worth showing once the view comes up. */
   private pending?: ToWebview;
-  private readonly disposables: vscode.Disposable[] = [];
+  /** Listeners of the currently resolved view; replaced when VS Code resolves the view again. */
+  private viewDisposables: vscode.Disposable[] = [];
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -32,6 +33,7 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   ) {}
 
   resolveWebviewView(view: vscode.WebviewView): void {
+    this.disposeViewListeners();
     this.view = view;
     this.ready = false;
     view.webview.options = {
@@ -40,7 +42,7 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
     };
     view.webview.html = this.renderHtml(view.webview);
 
-    this.disposables.push(
+    this.viewDisposables = [
       view.webview.onDidReceiveMessage((msg: FromWebview) => {
         if (msg.type === 'ready') {
           this.ready = true;
@@ -57,8 +59,9 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
       view.onDidDispose(() => {
         this.view = undefined;
         this.ready = false;
+        this.disposeViewListeners();
       }),
-    );
+    ];
   }
 
   async show(reaction: Reaction, options: ShowOptions): Promise<void> {
@@ -79,7 +82,12 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   dispose(): void {
-    vscode.Disposable.from(...this.disposables).dispose();
+    this.disposeViewListeners();
+  }
+
+  private disposeViewListeners(): void {
+    this.viewDisposables.forEach((d) => d.dispose());
+    this.viewDisposables = [];
   }
 
   private async reveal(): Promise<void> {

@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const audio = new AudioPlayer(vscode.Uri.joinPath(context.extensionUri, 'media', 'sounds').fsPath, log);
   const view = new WaifuViewProvider(context.extensionUri, () => config.spritesDirectory);
   const bus = new ErrorBus(busOptions(config));
-  const picker = new ReactionPicker();
+  let picker = new ReactionPicker({ phrases: config.phrases });
   let detectors: Detector[] = [];
 
   const startDetectors = () => {
@@ -58,6 +58,7 @@ export function activate(context: vscode.ExtensionContext): void {
         view.refresh();
       }
       bus.setOptions(busOptions(config));
+      picker = new ReactionPicker({ phrases: config.phrases });
       startDetectors();
     }),
   );
