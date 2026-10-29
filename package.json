@@ -93,6 +93,11 @@
           "default": true,
           "description": "Реагировать на команды в терминале с ненулевым кодом выхода (нужна shell integration)."
         },
+        "kawaiiError.detectors.debug": {
+          "type": "boolean",
+          "default": true,
+          "description": "Реагировать на остановку отладчика на исключении."
+        },
         "kawaiiError.diagnostics.onlyOnSave": {
           "type": "boolean",
           "default": false,

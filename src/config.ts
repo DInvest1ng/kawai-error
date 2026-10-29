@@ -12,6 +12,7 @@ export interface KawaiiConfig {
     diagnostics: boolean;
     tasks: boolean;
     terminal: boolean;
+    debug: boolean;
   };
   diagnosticsOnlyOnSave: boolean;
   terminalIgnoreExitCodes: number[];
@@ -35,6 +36,7 @@ export function readConfig(): KawaiiConfig {
       diagnostics: c.get('detectors.diagnostics', true),
       tasks: c.get('detectors.tasks', true),
       terminal: c.get('detectors.terminal', true),
+      debug: c.get('detectors.debug', true),
     },
     diagnosticsOnlyOnSave: c.get('diagnostics.onlyOnSave', false),
     terminalIgnoreExitCodes: c.get<number[]>('terminal.ignoreExitCodes', [130]).filter(Number.isInteger),

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { AudioPlayer } from './audio';
 import { KawaiiConfig, readConfig, SECTION } from './config';
+import { DebugDetector } from './detectors/debugDetector';
 import { Detector } from './detectors/detector';
 import { DiagnosticsDetector } from './detectors/diagnosticsDetector';
 import { TaskDetector } from './detectors/taskDetector';
@@ -78,6 +79,9 @@ function createDetectors(config: KawaiiConfig): Detector[] {
   }
   if (config.detectors.terminal) {
     list.push(new TerminalDetector({ ignoreExitCodes: config.terminalIgnoreExitCodes }));
+  }
+  if (config.detectors.debug) {
+    list.push(new DebugDetector());
   }
   return list;
 }
