@@ -5,6 +5,11 @@
   "version": "0.1.0",
   "publisher": "d-istomin",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DInvest1ng/kawai-error"
+  },
+  "icon": "media/marketplace-icon.png",
   "engines": {
     "vscode": "^1.93.0"
   },
@@ -154,11 +159,13 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "compile-tests": "rm -rf out-test && tsc -p tsconfig.test.json",
-    "test": "npm run compile-tests && node --test \"out-test/test/**/*.test.js\""
+    "test": "npm run compile-tests && node --test \"out-test/test/**/*.test.js\"",
+    "package": "vsce package --no-dependencies"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
     "@types/vscode": "^1.93.0",
+    "@vscode/vsce": "^4.1.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
     "typescript": "^6.0.3",
