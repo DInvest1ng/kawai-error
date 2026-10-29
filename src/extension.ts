@@ -3,6 +3,8 @@ import { AudioPlayer } from './audio';
 import { KawaiiConfig, readConfig, SECTION } from './config';
 import { Detector } from './detectors/detector';
 import { DiagnosticsDetector } from './detectors/diagnosticsDetector';
+import { TaskDetector } from './detectors/taskDetector';
+import { TerminalDetector } from './detectors/terminalDetector';
 import { ErrorBus } from './errorBus';
 import { ReactionPicker } from './reaction';
 import type { ErrorBurst } from './types';
@@ -70,6 +72,12 @@ function createDetectors(config: KawaiiConfig): Detector[] {
   const list: Detector[] = [];
   if (config.detectors.diagnostics) {
     list.push(new DiagnosticsDetector({ onlyOnSave: config.diagnosticsOnlyOnSave }));
+  }
+  if (config.detectors.tasks) {
+    list.push(new TaskDetector());
+  }
+  if (config.detectors.terminal) {
+    list.push(new TerminalDetector({ ignoreExitCodes: config.terminalIgnoreExitCodes }));
   }
   return list;
 }

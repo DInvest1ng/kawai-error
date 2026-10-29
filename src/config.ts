@@ -10,8 +10,11 @@ export interface KawaiiConfig {
   revealPanel: boolean;
   detectors: {
     diagnostics: boolean;
+    tasks: boolean;
+    terminal: boolean;
   };
   diagnosticsOnlyOnSave: boolean;
+  terminalIgnoreExitCodes: number[];
   spritesDirectory?: string;
   sound: {
     enabled: boolean;
@@ -30,8 +33,11 @@ export function readConfig(): KawaiiConfig {
     revealPanel: c.get('revealPanel', true),
     detectors: {
       diagnostics: c.get('detectors.diagnostics', true),
+      tasks: c.get('detectors.tasks', true),
+      terminal: c.get('detectors.terminal', true),
     },
     diagnosticsOnlyOnSave: c.get('diagnostics.onlyOnSave', false),
+    terminalIgnoreExitCodes: c.get<number[]>('terminal.ignoreExitCodes', [130]).filter(Number.isInteger),
     spritesDirectory: c.get<string>('sprites.directory')?.trim() || undefined,
     sound: {
       enabled: c.get('sound.enabled', true),

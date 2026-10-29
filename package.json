@@ -83,10 +83,30 @@
           "default": true,
           "description": "Реагировать на новые ошибки в Problems (диагностики)."
         },
+        "kawaiiError.detectors.tasks": {
+          "type": "boolean",
+          "default": true,
+          "description": "Реагировать на задачи (Tasks), завершившиеся с ненулевым кодом."
+        },
+        "kawaiiError.detectors.terminal": {
+          "type": "boolean",
+          "default": true,
+          "description": "Реагировать на команды в терминале с ненулевым кодом выхода (нужна shell integration)."
+        },
         "kawaiiError.diagnostics.onlyOnSave": {
           "type": "boolean",
           "default": false,
           "description": "Реагировать на ошибки диагностик только после сохранения файла."
+        },
+        "kawaiiError.terminal.ignoreExitCodes": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "default": [
+            130
+          ],
+          "description": "Коды выхода терминала, которые не считаются ошибкой (130 = Ctrl+C)."
         },
         "kawaiiError.sound.enabled": {
           "type": "boolean",
