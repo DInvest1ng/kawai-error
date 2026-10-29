@@ -1,0 +1,53 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+}
+
+.stage {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 8px 16px 0;
+  box-sizing: border-box;
+}
+
+.girl {
+  height: min(220px, 95%);
+  order: 0;
+}
+
+.bubble {
+  order: 1;
+  align-self: center;
+  max-width: 60%;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: var(--vscode-editorWidget-background);
+  border: 2px solid var(--vscode-focusBorder);
+}
+
+.phrase {
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: 600;
+}
+
+.detail {
+  margin: 4px 0 0;
+  opacity: 0.75;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em;
+  word-break: break-word;
+}
+
+.hidden {
+  display: none;
+}
