@@ -2,7 +2,7 @@
   "name": "kawaii-error",
   "displayName": "Kawaii Error",
   "description": "Аниме-девочка в панели реагирует на новые ошибки: «Хозяин, ошибка!»",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "d-istomin",
   "license": "MIT",
   "repository": {
