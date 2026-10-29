@@ -9,12 +9,14 @@
   <title>Kawaii</title>
 </head>
 <body>
+  <p id="hint" class="hint">Kawaii ждёт ошибок… <span class="hint-face">(｡•̀ᴗ-)✧</span></p>
   <div id="stage" class="stage">
+    <img id="girl" class="girl" alt="">
     <div id="bubble" class="bubble" role="status" aria-live="polite">
+      <p class="meta"><span id="source" class="source"></span><span id="count" class="count"></span></p>
       <p id="phrase" class="phrase"></p>
       <p id="detail" class="detail"></p>
     </div>
-    <img id="girl" class="girl" alt="">
   </div>
   <script nonce="{{nonce}}" src="{{scriptUri}}"></script>
 </body>

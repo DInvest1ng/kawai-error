@@ -12,6 +12,7 @@ export interface KawaiiConfig {
     diagnostics: boolean;
   };
   diagnosticsOnlyOnSave: boolean;
+  spritesDirectory?: string;
   sound: {
     enabled: boolean;
     volume: number;
@@ -31,6 +32,7 @@ export function readConfig(): KawaiiConfig {
       diagnostics: c.get('detectors.diagnostics', true),
     },
     diagnosticsOnlyOnSave: c.get('diagnostics.onlyOnSave', false),
+    spritesDirectory: c.get<string>('sprites.directory')?.trim() || undefined,
     sound: {
       enabled: c.get('sound.enabled', true),
       volume: Math.min(100, Math.max(0, c.get('sound.volume', 70))),

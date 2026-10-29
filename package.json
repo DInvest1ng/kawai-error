@@ -104,6 +104,11 @@
           "type": "string",
           "default": "",
           "description": "Папка со своими .wav (error*.wav, warning*.wav, test*.wav). Проверяется раньше встроенных звуков."
+        },
+        "kawaiiError.sprites.directory": {
+          "type": "string",
+          "default": "",
+          "description": "Папка со своими спрайтами: idle, talk, worried, surprised, happy (.png/.gif/.webp/.svg). Отсутствующие берутся из встроенных."
         }
       }
     }

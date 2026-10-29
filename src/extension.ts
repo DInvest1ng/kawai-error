@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext): void {
   let config = readConfig();
   const log = vscode.window.createOutputChannel('Kawaii Error');
   const audio = new AudioPlayer(vscode.Uri.joinPath(context.extensionUri, 'media', 'sounds').fsPath, log);
-  const view = new WaifuViewProvider(context.extensionUri, () => undefined);
+  const view = new WaifuViewProvider(context.extensionUri, () => config.spritesDirectory);
   const bus = new ErrorBus(busOptions(config));
   const picker = new ReactionPicker();
   let detectors: Detector[] = [];
@@ -49,7 +49,11 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!e.affectsConfiguration(SECTION)) {
         return;
       }
+      const previous = config;
       config = readConfig();
+      if (previous.spritesDirectory !== config.spritesDirectory) {
+        view.refresh();
+      }
       bus.setOptions(busOptions(config));
       startDetectors();
     }),
