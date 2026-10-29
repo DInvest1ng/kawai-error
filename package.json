@@ -46,7 +46,50 @@
         "title": "Test reaction",
         "category": "Kawaii"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Kawaii Error",
+      "properties": {
+        "kawaiiError.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Включить реакцию на ошибки."
+        },
+        "kawaiiError.debounceMs": {
+          "type": "number",
+          "default": 1500,
+          "minimum": 0,
+          "description": "Ошибки, пришедшие с интервалом меньше этого (мс), объединяются в одну реакцию."
+        },
+        "kawaiiError.cooldownSeconds": {
+          "type": "number",
+          "default": 10,
+          "minimum": 0,
+          "description": "Минимальная пауза между реакциями (секунды)."
+        },
+        "kawaiiError.displayDuration": {
+          "type": "number",
+          "default": 6,
+          "minimum": 1,
+          "description": "Сколько секунд девочка остаётся на экране."
+        },
+        "kawaiiError.revealPanel": {
+          "type": "boolean",
+          "default": true,
+          "description": "Показывать панель Kawaii при реакции, если она скрыта."
+        },
+        "kawaiiError.detectors.diagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Реагировать на новые ошибки в Problems (диагностики)."
+        },
+        "kawaiiError.diagnostics.onlyOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Реагировать на ошибки диагностик только после сохранения файла."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package:bundle",

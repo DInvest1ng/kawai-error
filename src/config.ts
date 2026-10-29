@@ -1,0 +1,30 @@
+import * as vscode from 'vscode';
+
+export const SECTION = 'kawaiiError';
+
+export interface KawaiiConfig {
+  enabled: boolean;
+  debounceMs: number;
+  cooldownSeconds: number;
+  displayDuration: number;
+  revealPanel: boolean;
+  detectors: {
+    diagnostics: boolean;
+  };
+  diagnosticsOnlyOnSave: boolean;
+}
+
+export function readConfig(): KawaiiConfig {
+  const c = vscode.workspace.getConfiguration(SECTION);
+  return {
+    enabled: c.get('enabled', true),
+    debounceMs: Math.max(0, c.get('debounceMs', 1500)),
+    cooldownSeconds: Math.max(0, c.get('cooldownSeconds', 10)),
+    displayDuration: Math.max(1, c.get('displayDuration', 6)),
+    revealPanel: c.get('revealPanel', true),
+    detectors: {
+      diagnostics: c.get('detectors.diagnostics', true),
+    },
+    diagnosticsOnlyOnSave: c.get('diagnostics.onlyOnSave', false),
+  };
+}
