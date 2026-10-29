@@ -81,6 +81,15 @@ describe('ErrorBus', () => {
     assert.equal(bursts[0].message, 'w2');
   });
 
+  it('prefers the more specific source when severities tie', () => {
+    bus.push({ source: 'task', severity: 'error', message: 'task failed' });
+    bus.push({ source: 'terminal', severity: 'error', message: 'exit 3' });
+    mock.timers.tick(1500);
+    assert.equal(bursts[0].source, 'task');
+    assert.equal(bursts[0].message, 'task failed');
+    assert.equal(bursts[0].count, 2);
+  });
+
   it('applies new options to later events', () => {
     bus.setOptions({ debounceMs: 100, cooldownMs: 0 });
     bus.push(err('a'));

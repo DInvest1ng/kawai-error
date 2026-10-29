@@ -10,7 +10,13 @@ type ToWebview =
   | { type: 'init'; sprites: Record<string, string> }
   | { type: 'react'; reaction: Reaction; durationMs: number };
 
-type FromWebview = { type: 'ready' };
+type FromWebview = { type: 'ready' } | { type: 'shown'; sprite: string; loaded: boolean };
+
+/** Reported by the webview once a reaction's sprite has loaded (or failed to). */
+export interface ShownEvent {
+  sprite: string;
+  loaded: boolean;
+}
 
 export interface ShowOptions {
   durationMs: number;
@@ -26,6 +32,8 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   private pending?: ToWebview;
   /** Listeners of the currently resolved view; replaced when VS Code resolves the view again. */
   private viewDisposables: vscode.Disposable[] = [];
+  private readonly shownEmitter = new vscode.EventEmitter<ShownEvent>();
+  readonly onDidShow = this.shownEmitter.event;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -48,6 +56,8 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
           this.ready = true;
           void view.webview.postMessage(this.initMessage(view.webview));
           this.flush();
+        } else if (msg.type === 'shown') {
+          this.shownEmitter.fire({ sprite: msg.sprite, loaded: msg.loaded });
         }
       }),
       // Without retainContextWhenHidden the page is torn down when hidden and sends 'ready' again.
@@ -83,6 +93,7 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   dispose(): void {
     this.disposeViewListeners();
+    this.shownEmitter.dispose();
   }
 
   private disposeViewListeners(): void {

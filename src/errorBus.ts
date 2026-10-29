@@ -1,4 +1,4 @@
-import type { ErrorBurst, ErrorEvent } from './types';
+import type { ErrorBurst, ErrorEvent, ErrorSource } from './types';
 
 export interface ErrorBusOptions {
   /** Events closer together than this are merged into one burst. */
@@ -10,6 +10,18 @@ export interface ErrorBusOptions {
 type Listener = (burst: ErrorBurst) => void;
 
 const SEVERITY_RANK = { warning: 0, error: 1 } as const;
+
+/**
+ * When severities tie, the more specific source explains the burst better. A failing task, for
+ * example, also ends a shell execution in its terminal; the burst should say "task", not "terminal".
+ */
+const SOURCE_RANK: Record<ErrorSource, number> = { terminal: 0, diagnostics: 1, task: 2, debug: 3, test: 4 };
+
+/** Does `prev` explain the burst better than the newer `next`? Ties go to the newer event. */
+function outranks(prev: ErrorEvent, next: ErrorEvent): boolean {
+  const bySeverity = SEVERITY_RANK[prev.severity] - SEVERITY_RANK[next.severity];
+  return bySeverity !== 0 ? bySeverity > 0 : SOURCE_RANK[prev.source] > SOURCE_RANK[next.source];
+}
 
 /**
  * Collects error events from all detectors, debounces them (trailing edge) and
@@ -37,9 +49,7 @@ export class ErrorBus {
     if (!prev) {
       this.pending = { ...event, count: 1 };
     } else {
-      // Keep the most recent event of the highest severity seen in this burst.
-      const keepPrev = SEVERITY_RANK[prev.severity] > SEVERITY_RANK[event.severity];
-      this.pending = { ...(keepPrev ? prev : event), count: prev.count + 1 };
+      this.pending = { ...(outranks(prev, event) ? prev : event), count: prev.count + 1 };
     }
 
     if (this.timer !== undefined) {

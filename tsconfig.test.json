@@ -4,5 +4,12 @@
     "outDir": "out-test",
     "sourceMap": false
   },
-  "include": ["src/test", "src/errorBus.ts", "src/reaction.ts", "src/types.ts"]
+  "include": [
+    "src/test",
+    "src/integration",
+    "src/errorBus.ts",
+    "src/reaction.ts",
+    "src/types.ts",
+    "src/audio.ts"
+  ]
 }

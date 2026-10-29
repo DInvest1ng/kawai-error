@@ -48,6 +48,17 @@
     }
   }
 
+  /** Tell the extension whether the sprite actually rendered (catches CSP / URI problems). */
+  function reportShown(/** @type {string} */ name) {
+    const send = () => vscode.postMessage({ type: 'shown', sprite: name, loaded: girl.naturalWidth > 0 });
+    if (girl.complete) {
+      send();
+    } else {
+      girl.addEventListener('load', send, { once: true });
+      girl.addEventListener('error', send, { once: true });
+    }
+  }
+
   function startTalking(/** @type {string} */ emotion) {
     stage.classList.add('talking');
     let open = false;
@@ -106,6 +117,7 @@
   function react(r, /** @type {number} */ durationMs) {
     resetTimers();
     setSprite(r.emotion);
+    reportShown(r.emotion);
     source.textContent = SOURCE_LABELS[/** @type {keyof typeof SOURCE_LABELS} */ (r.source)] || r.source;
     count.textContent = r.count > 1 ? `×${r.count}` : '';
     detail.textContent = r.detail;

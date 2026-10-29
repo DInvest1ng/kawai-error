@@ -7,11 +7,17 @@ import { DiagnosticsDetector } from './detectors/diagnosticsDetector';
 import { TaskDetector } from './detectors/taskDetector';
 import { TerminalDetector } from './detectors/terminalDetector';
 import { ErrorBus } from './errorBus';
-import { ReactionPicker } from './reaction';
+import { Reaction, ReactionPicker } from './reaction';
 import type { ErrorBurst } from './types';
-import { WaifuViewProvider } from './waifuView';
+import { ShownEvent, WaifuViewProvider } from './waifuView';
 
-export function activate(context: vscode.ExtensionContext): void {
+/** Returned from activate(); used by the integration tests. */
+export interface KawaiiApi {
+  onReaction: vscode.Event<Reaction>;
+  onWebviewShown: vscode.Event<ShownEvent>;
+}
+
+export function activate(context: vscode.ExtensionContext): KawaiiApi {
   let config = readConfig();
   const log = vscode.window.createOutputChannel('Kawaii Error');
   const audio = new AudioPlayer(vscode.Uri.joinPath(context.extensionUri, 'media', 'sounds').fsPath, log);
@@ -19,6 +25,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const bus = new ErrorBus(busOptions(config));
   let picker = new ReactionPicker({ phrases: config.phrases });
   let detectors: Detector[] = [];
+  const reactions = new vscode.EventEmitter<Reaction>();
 
   const startDetectors = () => {
     detectors.forEach((d) => d.dispose());
@@ -33,12 +40,14 @@ export function activate(context: vscode.ExtensionContext): void {
     log.appendLine(`[${burst.source}] x${burst.count} ${burst.message}`);
     void view.show(reaction, { durationMs: config.displayDuration * 1000, reveal: config.revealPanel });
     audio.play(reaction.sound, config.sound);
+    reactions.fire(reaction);
   };
 
   startDetectors();
   bus.onBurst(react);
 
   context.subscriptions.push(
+    reactions,
     log,
     audio,
     view,
@@ -62,6 +71,8 @@ export function activate(context: vscode.ExtensionContext): void {
       startDetectors();
     }),
   );
+
+  return { onReaction: reactions.event, onWebviewShown: view.onDidShow };
 }
 
 export function deactivate(): void {}

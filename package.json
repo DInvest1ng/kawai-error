@@ -2,7 +2,7 @@
   "name": "kawaii-error",
   "displayName": "Kawaii Error",
   "description": "Аниме-девочка в панели реагирует на новые ошибки: «Хозяин, ошибка!»",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "d-istomin",
   "license": "MIT",
   "repository": {
@@ -160,11 +160,13 @@
     "lint": "eslint src",
     "compile-tests": "rm -rf out-test && tsc -p tsconfig.test.json",
     "test": "npm run compile-tests && node --test \"out-test/test/**/*.test.js\"",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package --no-dependencies",
+    "test:integration": "npm run compile && npm run compile-tests && node out-test/integration/runTest.js"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
     "@types/vscode": "^1.93.0",
+    "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.1.0",
     "esbuild": "^0.28.2",
     "eslint": "^10.13.0",
