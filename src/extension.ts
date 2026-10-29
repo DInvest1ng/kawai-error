@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { AudioPlayer } from './audio';
 import { KawaiiConfig, readConfig, SECTION } from './config';
 import { Detector } from './detectors/detector';
 import { DiagnosticsDetector } from './detectors/diagnosticsDetector';
@@ -9,6 +10,8 @@ import { WaifuViewProvider } from './waifuView';
 
 export function activate(context: vscode.ExtensionContext): void {
   let config = readConfig();
+  const log = vscode.window.createOutputChannel('Kawaii Error');
+  const audio = new AudioPlayer(vscode.Uri.joinPath(context.extensionUri, 'media', 'sounds').fsPath, log);
   const view = new WaifuViewProvider(context.extensionUri, () => undefined);
   const bus = new ErrorBus(busOptions(config));
   const picker = new ReactionPicker();
@@ -24,13 +27,17 @@ export function activate(context: vscode.ExtensionContext): void {
 
   const react = (burst: ErrorBurst) => {
     const reaction = picker.pick(burst);
+    log.appendLine(`[${burst.source}] x${burst.count} ${burst.message}`);
     void view.show(reaction, { durationMs: config.displayDuration * 1000, reveal: config.revealPanel });
+    audio.play(reaction.sound, config.sound);
   };
 
   startDetectors();
   bus.onBurst(react);
 
   context.subscriptions.push(
+    log,
+    audio,
     view,
     { dispose: () => bus.dispose() },
     { dispose: () => detectors.forEach((d) => d.dispose()) },

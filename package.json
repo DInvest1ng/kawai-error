@@ -87,6 +87,23 @@
           "type": "boolean",
           "default": false,
           "description": "Реагировать на ошибки диагностик только после сохранения файла."
+        },
+        "kawaiiError.sound.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Проигрывать звук при реакции."
+        },
+        "kawaiiError.sound.volume": {
+          "type": "number",
+          "default": 70,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Громкость 0–100. Работает на macOS (afplay) и Linux (paplay); на Windows и с aplay громкость системная."
+        },
+        "kawaiiError.sound.directory": {
+          "type": "string",
+          "default": "",
+          "description": "Папка со своими .wav (error*.wav, warning*.wav, test*.wav). Проверяется раньше встроенных звуков."
         }
       }
     }
