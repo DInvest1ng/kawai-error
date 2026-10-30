@@ -9,10 +9,55 @@
   <title>Kawaii</title>
 </head>
 <body>
-  <p id="hint" class="hint">Kawaii ждёт ошибок… <span class="hint-face">(｡•̀ᴗ-)✧</span></p>
+  <!-- Decorations are inline SVG symbols: the CSP allows no data: images or fonts. -->
+  <svg class="defs" aria-hidden="true">
+    <defs>
+      <radialGradient id="petal-fill" cx="50%" cy="80%" r="90%">
+        <stop offset="0" stop-color="#fff5fa"/>
+        <stop offset="0.55" stop-color="#ffc2dc"/>
+        <stop offset="1" stop-color="#ff8dbf"/>
+      </radialGradient>
+      <linearGradient id="heart-fill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffa3cb"/>
+        <stop offset="1" stop-color="#ff5c9d"/>
+      </linearGradient>
+    </defs>
+    <symbol id="sakura" viewBox="-12 -12 24 24">
+      <g fill="url(#petal-fill)" stroke="#ff7fb5" stroke-width="0.6" stroke-linejoin="round">
+        <path id="petal" d="M0 -1.2C-3.6 -4 -4.6 -8.6 -1.6 -11.2L0 -9.6L1.6 -11.2C4.6 -8.6 3.6 -4 0 -1.2Z"/>
+        <use href="#petal" transform="rotate(72)"/>
+        <use href="#petal" transform="rotate(144)"/>
+        <use href="#petal" transform="rotate(216)"/>
+        <use href="#petal" transform="rotate(288)"/>
+      </g>
+      <circle r="2.1" fill="#ffd36e" stroke="#f5a623" stroke-width="0.5"/>
+    </symbol>
+    <symbol id="heart" viewBox="0 0 24 22">
+      <path d="M12 20.5C5.5 15.6 1.5 12 1.5 7.2A5.4 5.4 0 0 1 12 4.6a5.4 5.4 0 0 1 10.5 2.6c0 4.8-4 8.4-10.5 13.3Z"
+            fill="url(#heart-fill)" stroke="#fff" stroke-width="1.4"/>
+    </symbol>
+    <symbol id="sparkle" viewBox="-10 -10 20 20">
+      <path d="M0 -10C0.9 -3 3 -0.9 10 0C3 0.9 0.9 3 0 10C-0.9 3 -3 0.9 -10 0C-3 -0.9 -0.9 -3 0 -10Z" fill="#fff6a8"/>
+    </symbol>
+  </svg>
+
+  <p id="hint" class="hint">
+    <svg class="hint-flower"><use href="#sakura"/></svg>
+    Kawaii ждёт ошибок… <span class="hint-face">(｡•̀ᴗ-)✧</span>
+  </p>
   <div id="stage" class="stage">
-    <img id="girl" class="girl" alt="">
+    <div class="girl-wrap">
+      <div class="halo" aria-hidden="true"></div>
+      <img id="girl" class="girl" alt="">
+      <div id="fx" class="fx" aria-hidden="true"></div>
+    </div>
     <div id="bubble" class="bubble" role="status" aria-live="polite">
+      <svg class="deco flower f1" aria-hidden="true"><use href="#sakura"/></svg>
+      <svg class="deco flower f2" aria-hidden="true"><use href="#sakura"/></svg>
+      <svg class="deco flower f3" aria-hidden="true"><use href="#sakura"/></svg>
+      <svg class="deco heart h1" aria-hidden="true"><use href="#heart"/></svg>
+      <svg class="deco sparkle s1" aria-hidden="true"><use href="#sparkle"/></svg>
+      <svg class="deco sparkle s2" aria-hidden="true"><use href="#sparkle"/></svg>
       <p class="meta"><span id="source" class="source"></span><span id="count" class="count"></span></p>
       <p id="phrase" class="phrase"></p>
       <p id="detail" class="detail"></p>

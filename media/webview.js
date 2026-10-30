@@ -9,6 +9,7 @@
   const detail = $('detail');
   const source = $('source');
   const count = $('count');
+  const fx = $('fx');
 
   const APPEAR_MS = 480;
   const LEAVE_MS = 450;
@@ -23,6 +24,8 @@
   };
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const BURST = ['sakura', 'sakura', 'sakura', 'heart', 'heart', 'sparkle', 'sparkle'];
 
   /** @type {Record<string, string>} */
   let sprites = {};
@@ -79,11 +82,40 @@
     stage.classList.remove('talking');
   }
 
+  /** Petals, hearts and sparkles floating up around the girl. */
+  function burst() {
+    fx.replaceChildren();
+    if (reducedMotion.matches) {
+      return;
+    }
+    const rand = (/** @type {number} */ min, /** @type {number} */ max) => min + Math.random() * (max - min);
+    for (let i = 0; i < 12; i++) {
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      const use = document.createElementNS(SVG_NS, 'use');
+      use.setAttribute('href', `#${BURST[i % BURST.length]}`);
+      svg.appendChild(use);
+      const vars = {
+        '--x': `${rand(-15, 95)}%`,
+        '--y': `${rand(10, 75)}%`,
+        '--size': `${rand(10, 22)}px`,
+        '--dx': `${rand(-30, 30)}px`,
+        '--rot': `${rand(-200, 200)}deg`,
+        '--dur': `${rand(1400, 2400)}ms`,
+        '--delay': `${rand(250, 900)}ms`,
+      };
+      for (const [k, v] of Object.entries(vars)) {
+        svg.style.setProperty(k, v);
+      }
+      fx.appendChild(svg);
+    }
+  }
+
   /** Restart the CSS entry animations even if the girl is already on screen. */
   function enter() {
     stage.classList.remove('visible', 'leaving', 'said', 'talking');
     void stage.offsetWidth;
     stage.classList.add('visible');
+    burst();
   }
 
   function leave() {
