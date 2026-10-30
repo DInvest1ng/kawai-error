@@ -1,6 +1,6 @@
 import * as assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { DEFAULT_PHRASES, ReactionPicker, TEST_PHRASE } from '../reaction';
+import { DEFAULT_PHRASES, ReactionPicker, TEST_PHRASE, TEST_VOICE } from '../reaction';
 import type { ErrorBurst } from '../types';
 
 /** Small deterministic PRNG (mulberry32). */
@@ -79,6 +79,20 @@ describe('ReactionPicker', () => {
   it('gives the test command a happy reaction', () => {
     const r = new ReactionPicker({ rng: seeded(5) }).pick(burst({ source: 'test' }));
     assert.deepEqual([r.phrase, r.emotion, r.sound], [TEST_PHRASE, 'happy', 'test']);
+  });
+
+  it('pairs each built-in phrase with its own voice line', () => {
+    const picker = new ReactionPicker({ rng: seeded(11) });
+    for (let i = 0; i < 50; i++) {
+      const r = picker.pick(burst({ severity: i % 2 ? 'warning' : 'error' }));
+      assert.equal(r.voice, `voice-${DEFAULT_PHRASES.indexOf(r.phrase)}`);
+    }
+    assert.equal(picker.pick(burst({ source: 'test' })).voice, TEST_VOICE);
+  });
+
+  it('has no voice line for custom phrases', () => {
+    const r = new ReactionPicker({ phrases: ['Своя фраза'], rng: seeded(3) }).pick(burst());
+    assert.equal(r.voice, undefined);
   });
 
   it('passes source, detail and count through', () => {

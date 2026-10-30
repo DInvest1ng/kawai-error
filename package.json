@@ -2,7 +2,7 @@
   "name": "kawaii-error",
   "displayName": "Kawaii Error",
   "description": "Аниме-девочка в панели реагирует на новые ошибки: «Хозяин, ошибка!»",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "publisher": "d-istomin",
   "license": "MIT",
   "repository": {
@@ -141,7 +141,7 @@
         "kawaiiError.sound.directory": {
           "type": "string",
           "default": "",
-          "description": "Папка со своими .wav (error*.wav, warning*.wav, test*.wav). Проверяется раньше встроенных звуков."
+          "description": "Папка со своими .wav (voice-0…voice-5.wav и voice-test.wav — озвучка встроенных фраз; error*.wav, warning*.wav, test*.wav — остальное). Проверяется раньше встроенных звуков."
         },
         "kawaiiError.sprites.directory": {
           "type": "string",

@@ -39,7 +39,7 @@ export function activate(context: vscode.ExtensionContext): KawaiiApi {
     const reaction = picker.pick(burst);
     log.appendLine(`[${burst.source}] x${burst.count} ${burst.message}`);
     void view.show(reaction, { durationMs: config.displayDuration * 1000, reveal: config.revealPanel });
-    audio.play(reaction.sound, config.sound);
+    audio.play(reaction.sound, config.sound, reaction.voice);
     reactions.fire(reaction);
   };
 

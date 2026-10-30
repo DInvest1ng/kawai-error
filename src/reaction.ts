@@ -7,6 +7,8 @@ export interface Reaction {
   emotion: Emotion;
   /** Sound name; the player looks for `<sound>*.wav`. */
   sound: string;
+  /** Voice line for the phrase (`<voice>.wav`), played instead of `sound` when the file exists. */
+  voice?: string;
   source: ErrorSource;
   detail: string;
   count: number;
@@ -17,11 +19,18 @@ export const DEFAULT_PHRASES: readonly string[] = [
   'Хозяин, там опять красненькое!',
   'Ой-ой, что-то сломалось…',
   'Хозяин, компилятор ругается!',
-  'Хозяин, ошибочка закралась~',
+  'Хозяин, что-то не так~',
   'Не волнуйтесь, хозяин, вы справитесь!',
 ];
 
 export const TEST_PHRASE = 'Хозяин, это всего лишь проверка~';
+
+/** Voice line names: `voice-<index in DEFAULT_PHRASES>` and `voice-test`. */
+export const TEST_VOICE = 'voice-test';
+export const voiceFor = (phrase: string): string | undefined => {
+  const i = DEFAULT_PHRASES.indexOf(phrase);
+  return i >= 0 ? `voice-${i}` : undefined;
+};
 
 export interface ReactionPickerOptions {
   phrases?: readonly string[];
@@ -43,14 +52,15 @@ export class ReactionPicker {
   pick(burst: ErrorBurst): Reaction {
     const base = { source: burst.source, detail: burst.message, count: burst.count };
     if (burst.source === 'test') {
-      return { ...base, phrase: TEST_PHRASE, emotion: 'happy', sound: 'test' };
+      return { ...base, phrase: TEST_PHRASE, emotion: 'happy', sound: 'test', voice: TEST_VOICE };
     }
     const phrase = this.pickPhrase();
+    const voice = voiceFor(phrase);
     if (burst.severity === 'warning') {
-      return { ...base, phrase, emotion: 'surprised', sound: 'warning' };
+      return { ...base, phrase, emotion: 'surprised', sound: 'warning', voice };
     }
     const emotion: Emotion = this.rng() < 0.5 ? 'worried' : 'surprised';
-    return { ...base, phrase, emotion, sound: 'error' };
+    return { ...base, phrase, emotion, sound: 'error', voice };
   }
 
   private pickPhrase(): string {

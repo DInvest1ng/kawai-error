@@ -1,4 +1,5 @@
 import * as assert from 'node:assert/strict';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { KawaiiApi } from '../extension';
@@ -53,6 +54,9 @@ const tests: Test[] = [
       await vscode.commands.executeCommand('kawaiiError.testReaction');
       const r = await reaction;
       assert.equal(r.emotion, 'happy');
+      assert.equal(r.voice, 'voice-test');
+      const ext = vscode.extensions.getExtension('d-istomin.kawaii-error')!;
+      assert.ok(fs.existsSync(path.join(ext.extensionPath, 'media', 'sounds', 'voice-test.wav')));
       const s = await Promise.race([
         shown,
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error('webview never reported the sprite')), 15_000)),
