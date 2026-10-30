@@ -2,7 +2,7 @@
   "name": "kawaii-error",
   "displayName": "Kawaii Error",
   "description": "Аниме-девочка в панели реагирует на новые ошибки: «Хозяин, ошибка!»",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "d-istomin",
   "license": "MIT",
   "repository": {
@@ -50,6 +50,12 @@
         "command": "kawaiiError.testReaction",
         "title": "Test reaction",
         "category": "Kawaii"
+      },
+      {
+        "command": "kawaiiError.chooseCharacter",
+        "title": "Выбрать персонажа",
+        "category": "Kawaii",
+        "icon": "$(person)"
       }
     ],
     "configuration": {
@@ -82,6 +88,23 @@
           "type": "boolean",
           "default": true,
           "description": "Показывать панель Kawaii при реакции, если она скрыта."
+        },
+        "kawaiiError.character": {
+          "type": "string",
+          "default": "natsuki",
+          "enum": [
+            "natsuki",
+            "kurilov"
+          ],
+          "enumItemLabels": [
+            "Нацуки",
+            "Курилов"
+          ],
+          "enumDescriptions": [
+            "Розоволосая девочка в школьной форме, говорит голосом.",
+            "Курилов в худи, свои реплики, без голоса."
+          ],
+          "description": "Персонаж в панели. Удобнее выбирать кнопкой в заголовке панели Kawaii (карусель)."
         },
         "kawaiiError.phrases": {
           "type": "array",
@@ -141,14 +164,23 @@
         "kawaiiError.sound.directory": {
           "type": "string",
           "default": "",
-          "description": "Папка со своими .wav (voice-0…voice-5.wav и voice-test.wav — озвучка встроенных фраз; error*.wav, warning*.wav, test*.wav — остальное). Проверяется раньше встроенных звуков."
+          "description": "Папка со своими .wav (voice-0…voice-N.wav и voice-test.wav — озвучка фраз; error*.wav, warning*.wav, test*.wav — остальное). Проверяется раньше звуков персонажа и встроенных."
         },
         "kawaiiError.sprites.directory": {
           "type": "string",
           "default": "",
-          "description": "Папка со своими спрайтами: idle, talk, worried, surprised, happy (.png/.gif/.webp/.svg). Отсутствующие берутся из встроенных."
+          "description": "Папка со своими спрайтами для выбранного персонажа: idle, talk, worried, surprised, happy, angry (.png/.gif/.webp/.svg). Отсутствующие берутся у персонажа."
         }
       }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "kawaiiError.chooseCharacter",
+          "when": "view == kawaiiError.view",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {

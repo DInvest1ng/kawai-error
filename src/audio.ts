@@ -25,12 +25,16 @@ export class AudioPlayer implements vscode.Disposable {
     private readonly log: vscode.OutputChannel,
   ) {}
 
-  /** Plays `<voice>.wav` if there is one, otherwise a `<sound>*.wav`. */
-  play(sound: string, settings: AudioSettings, voice?: string): void {
+  /**
+   * Plays `<voice>.wav` if there is one (user folder, then the character's folder),
+   * otherwise a `<sound>*.wav`.
+   */
+  play(sound: string, settings: AudioSettings, voice?: string, characterDir?: string): void {
     if (!settings.enabled || settings.volume <= 0) {
       return;
     }
-    const file = (voice && this.resolveExact(voice, settings.directory)) || this.resolve(sound, settings.directory);
+    const file =
+      (voice && this.resolveExact(voice, [settings.directory, characterDir])) || this.resolve(sound, settings.directory);
     if (!file) {
       this.log.appendLine(`[audio] no .wav found for "${sound}"`);
       return;
@@ -75,9 +79,10 @@ export class AudioPlayer implements vscode.Disposable {
     });
   }
 
-  private resolveExact(name: string, userDir?: string): string | undefined {
+  private resolveExact(name: string, extraDirs: (string | undefined)[]): string | undefined {
     const wanted = `${name}.wav`.toLowerCase();
-    for (const dir of this.dirs(userDir)) {
+    const dirs = [...extraDirs, this.bundledDir].filter((d): d is string => !!d);
+    for (const dir of dirs) {
       const file = listWavs(dir).find((f) => path.basename(f).toLowerCase() === wanted);
       if (file) {
         return file;

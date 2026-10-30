@@ -1,16 +1,30 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import * as vscode from 'vscode';
+import { Character, findSprite, SPRITE_NAMES } from './characters';
 import type { Reaction } from './reaction';
 
-const SPRITE_NAMES = ['idle', 'talk', 'worried', 'surprised', 'happy'] as const;
-const SPRITE_EXTENSIONS = ['.png', '.gif', '.webp', '.svg'];
+interface CharacterCard {
+  id: string;
+  name: string;
+  sprites: Record<string, string>;
+}
 
 type ToWebview =
-  | { type: 'init'; sprites: Record<string, string> }
-  | { type: 'react'; reaction: Reaction; durationMs: number };
+  | { type: 'init'; characters: CharacterCard[]; current: string }
+  | { type: 'react'; reaction: Reaction; durationMs: number }
+  | { type: 'openPicker' };
 
-type FromWebview = { type: 'ready' } | { type: 'shown'; sprite: string; loaded: boolean };
+type FromWebview =
+  | { type: 'ready' }
+  | { type: 'shown'; sprite: string; loaded: boolean }
+  | { type: 'select'; id: string };
+
+/** What the view shows: all packs, the chosen one, and the user's sprite folder (overrides the chosen pack). */
+export interface ViewState {
+  characters: readonly Character[];
+  current?: Character;
+  spritesDirectory?: string;
+}
 
 /** Reported by the webview once a reaction's sprite has loaded (or failed to). */
 export interface ShownEvent {
@@ -32,12 +46,16 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   private pending?: ToWebview;
   /** Listeners of the currently resolved view; replaced when VS Code resolves the view again. */
   private viewDisposables: vscode.Disposable[] = [];
+  private pickerRequested = false;
   private readonly shownEmitter = new vscode.EventEmitter<ShownEvent>();
   readonly onDidShow = this.shownEmitter.event;
+  private readonly selectEmitter = new vscode.EventEmitter<string>();
+  /** Fires with a character id chosen in the carousel. */
+  readonly onDidSelectCharacter = this.selectEmitter.event;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly getSpriteDirectory: () => string | undefined,
+    private readonly getState: () => ViewState,
   ) {}
 
   resolveWebviewView(view: vscode.WebviewView): void {
@@ -58,6 +76,8 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
           this.flush();
         } else if (msg.type === 'shown') {
           this.shownEmitter.fire({ sprite: msg.sprite, loaded: msg.loaded });
+        } else if (msg.type === 'select') {
+          this.selectEmitter.fire(msg.id);
         }
       }),
       // Without retainContextWhenHidden the page is torn down when hidden and sends 'ready' again.
@@ -82,7 +102,21 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
     this.flush();
   }
 
-  /** Reload sprites, e.g. after the sprite directory setting changed. */
+  /** Shows the character carousel, revealing the panel first. */
+  async openPicker(): Promise<void> {
+    this.pickerRequested = true;
+    await this.reveal();
+    this.flush();
+  }
+
+  /** Re-send the characters, e.g. after another one was chosen. */
+  update(): void {
+    if (this.view && this.ready) {
+      void this.view.webview.postMessage(this.initMessage(this.view.webview));
+    }
+  }
+
+  /** Reload the page, e.g. after the sprite directory setting changed (resource roots change too). */
   refresh(): void {
     if (this.view) {
       this.ready = false;
@@ -94,6 +128,7 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   dispose(): void {
     this.disposeViewListeners();
     this.shownEmitter.dispose();
+    this.selectEmitter.dispose();
   }
 
   private disposeViewListeners(): void {
@@ -117,9 +152,16 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   private flush(): void {
-    if (this.view && this.ready && this.pending) {
+    if (!this.view || !this.ready) {
+      return;
+    }
+    if (this.pending) {
       void this.view.webview.postMessage(this.pending);
       this.pending = undefined;
+    }
+    if (this.pickerRequested) {
+      void this.view.webview.postMessage({ type: 'openPicker' } satisfies ToWebview);
+      this.pickerRequested = false;
     }
   }
 
@@ -129,7 +171,7 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
 
   private resourceRoots(): vscode.Uri[] {
     const roots = [this.mediaUri()];
-    const userDir = this.getSpriteDirectory();
+    const userDir = this.getState().spritesDirectory;
     if (userDir) {
       roots.push(vscode.Uri.file(userDir));
     }
@@ -137,16 +179,20 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
   }
 
   private initMessage(webview: vscode.Webview): ToWebview {
-    const userDir = this.getSpriteDirectory();
-    const dirs = [userDir, this.mediaUri('sprites').fsPath].filter((d): d is string => !!d);
-    const sprites: Record<string, string> = {};
-    for (const name of SPRITE_NAMES) {
-      const file = findSprite(dirs, name);
-      if (file) {
-        sprites[name] = webview.asWebviewUri(vscode.Uri.file(file)).toString();
+    const { characters, current, spritesDirectory } = this.getState();
+    const cards = characters.map((c) => {
+      // The user's sprite folder overrides only the chosen character.
+      const dirs = [c === current ? spritesDirectory : undefined, c.dir].filter((d): d is string => !!d);
+      const sprites: Record<string, string> = {};
+      for (const name of SPRITE_NAMES) {
+        const file = findSprite(dirs, name);
+        if (file) {
+          sprites[name] = webview.asWebviewUri(vscode.Uri.file(file)).toString();
+        }
       }
-    }
-    return { type: 'init', sprites };
+      return { id: c.id, name: c.name, sprites };
+    });
+    return { type: 'init', characters: cards, current: current?.id ?? '' };
   }
 
   private renderHtml(webview: vscode.Webview): string {
@@ -160,18 +206,6 @@ export class WaifuViewProvider implements vscode.WebviewViewProvider, vscode.Dis
     };
     return template.replace(/\{\{(\w+)\}\}/g, (match: string, key: string) => values[key] ?? match);
   }
-}
-
-function findSprite(dirs: string[], name: string): string | undefined {
-  for (const dir of dirs) {
-    for (const ext of SPRITE_EXTENSIONS) {
-      const file = path.join(dir, name + ext);
-      if (fs.existsSync(file)) {
-        return file;
-      }
-    }
-  }
-  return undefined;
 }
 
 function makeNonce(): string {

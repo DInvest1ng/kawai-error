@@ -17,6 +17,7 @@ export interface KawaiiConfig {
   };
   diagnosticsOnlyOnSave: boolean;
   terminalIgnoreExitCodes: number[];
+  character: string;
   spritesDirectory?: string;
   sound: {
     enabled: boolean;
@@ -42,6 +43,7 @@ export function readConfig(): KawaiiConfig {
     },
     diagnosticsOnlyOnSave: c.get('diagnostics.onlyOnSave', false),
     terminalIgnoreExitCodes: c.get<number[]>('terminal.ignoreExitCodes', [130]).filter(Number.isInteger),
+    character: c.get<string>('character', 'natsuki'),
     spritesDirectory: c.get<string>('sprites.directory')?.trim() || undefined,
     sound: {
       enabled: c.get('sound.enabled', true),

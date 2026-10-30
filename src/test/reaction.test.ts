@@ -1,6 +1,6 @@
 import * as assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { DEFAULT_PHRASES, ReactionPicker, TEST_PHRASE, TEST_VOICE } from '../reaction';
+import { CharacterLines, DEFAULT_PHRASES, ReactionPicker, TEST_PHRASE, TEST_VOICE } from '../reaction';
 import type { ErrorBurst } from '../types';
 
 /** Small deterministic PRNG (mulberry32). */
@@ -93,6 +93,24 @@ describe('ReactionPicker', () => {
   it('has no voice line for custom phrases', () => {
     const r = new ReactionPicker({ phrases: ['Своя фраза'], rng: seeded(3) }).pick(burst());
     assert.equal(r.voice, undefined);
+  });
+
+  it("uses the character's phrases, test phrase and error faces", () => {
+    const character: CharacterLines = { phrases: ['А', 'Б'], testPhrase: 'Тест', errorEmotions: ['angry'] };
+    const picker = new ReactionPicker({ character, rng: seeded(9) });
+    for (let i = 0; i < 10; i++) {
+      const r = picker.pick(burst());
+      assert.ok(character.phrases.includes(r.phrase));
+      assert.equal(r.emotion, 'angry');
+      assert.equal(r.voice, `voice-${character.phrases.indexOf(r.phrase)}`);
+    }
+    assert.equal(picker.pick(burst({ source: 'test' })).phrase, 'Тест');
+  });
+
+  it("lets user phrases override the character's, without voice lines", () => {
+    const character: CharacterLines = { phrases: ['А'], testPhrase: 'Тест', errorEmotions: ['worried'] };
+    const r = new ReactionPicker({ character, phrases: ['Моя'], rng: seeded(1) }).pick(burst());
+    assert.deepEqual([r.phrase, r.voice], ['Моя', undefined]);
   });
 
   it('passes source, detail and count through', () => {

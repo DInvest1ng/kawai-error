@@ -1,6 +1,6 @@
 import type { ErrorBurst, ErrorSource } from './types';
 
-export type Emotion = 'worried' | 'surprised' | 'happy';
+export type Emotion = 'worried' | 'surprised' | 'happy' | 'angry';
 
 export interface Reaction {
   phrase: string;
@@ -14,6 +14,7 @@ export interface Reaction {
   count: number;
 }
 
+/** Natsuki's lines, used when no character is given. */
 export const DEFAULT_PHRASES: readonly string[] = [
   'Хозяин, ошибка!',
   'Хозяин, там опять красненькое!',
@@ -25,42 +26,63 @@ export const DEFAULT_PHRASES: readonly string[] = [
 
 export const TEST_PHRASE = 'Хозяин, это всего лишь проверка~';
 
-/** Voice line names: `voice-<index in DEFAULT_PHRASES>` and `voice-test`. */
+/** Voice line names: `voice-<index in the character's phrases>` and `voice-test`. */
 export const TEST_VOICE = 'voice-test';
-export const voiceFor = (phrase: string): string | undefined => {
-  const i = DEFAULT_PHRASES.indexOf(phrase);
-  return i >= 0 ? `voice-${i}` : undefined;
+
+/** What the picker needs from a character pack. */
+export interface CharacterLines {
+  phrases: readonly string[];
+  testPhrase: string;
+  errorEmotions: readonly Emotion[];
+}
+
+const DEFAULT_LINES: CharacterLines = {
+  phrases: DEFAULT_PHRASES,
+  testPhrase: TEST_PHRASE,
+  errorEmotions: ['worried', 'surprised'],
 };
 
 export interface ReactionPickerOptions {
+  character?: CharacterLines;
+  /** User phrases from the settings; they replace the character's and have no voice lines. */
   phrases?: readonly string[];
   /** Returns a number in [0, 1). Injectable for tests. */
   rng?: () => number;
 }
 
 export class ReactionPicker {
+  private readonly lines: CharacterLines;
   private readonly phrases: readonly string[];
+  private readonly voiced: boolean;
   private readonly rng: () => number;
   private lastPhrase?: string;
 
   constructor(options: ReactionPickerOptions = {}) {
+    this.lines = options.character ?? DEFAULT_LINES;
     const custom = options.phrases?.map((p) => p.trim()).filter((p) => p.length > 0);
-    this.phrases = custom && custom.length > 0 ? custom : DEFAULT_PHRASES;
+    this.voiced = !custom || custom.length === 0;
+    this.phrases = this.voiced ? this.lines.phrases : custom!;
     this.rng = options.rng ?? Math.random;
   }
 
   pick(burst: ErrorBurst): Reaction {
     const base = { source: burst.source, detail: burst.message, count: burst.count };
     if (burst.source === 'test') {
-      return { ...base, phrase: TEST_PHRASE, emotion: 'happy', sound: 'test', voice: TEST_VOICE };
+      return { ...base, phrase: this.lines.testPhrase, emotion: 'happy', sound: 'test', voice: TEST_VOICE };
     }
     const phrase = this.pickPhrase();
-    const voice = voiceFor(phrase);
+    const voice = this.voiceFor(phrase);
     if (burst.severity === 'warning') {
       return { ...base, phrase, emotion: 'surprised', sound: 'warning', voice };
     }
-    const emotion: Emotion = this.rng() < 0.5 ? 'worried' : 'surprised';
+    const emotions = this.lines.errorEmotions;
+    const emotion = emotions[Math.min(Math.floor(this.rng() * emotions.length), emotions.length - 1)];
     return { ...base, phrase, emotion, sound: 'error', voice };
+  }
+
+  private voiceFor(phrase: string): string | undefined {
+    const i = this.voiced ? this.phrases.indexOf(phrase) : -1;
+    return i >= 0 ? `voice-${i}` : undefined;
   }
 
   private pickPhrase(): string {

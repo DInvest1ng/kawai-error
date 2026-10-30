@@ -63,6 +63,22 @@
       <p id="detail" class="detail"></p>
     </div>
   </div>
+
+  <button id="pick" class="pick-btn" type="button" title="Выбрать персонажа" aria-label="Выбрать персонажа" hidden>
+    <svg aria-hidden="true"><use href="#sakura"/></svg>
+  </button>
+
+  <div id="picker" class="picker" role="dialog" aria-modal="true" aria-label="Выбор персонажа" hidden>
+    <p class="pk-title">Кто будет с тобой? <span aria-hidden="true">♡</span></p>
+    <button id="pk-close" class="pk-close" type="button" aria-label="Закрыть">✕</button>
+    <button id="pk-prev" class="pk-arrow pk-prev" type="button" aria-label="Предыдущий">‹</button>
+    <div id="pk-track" class="pk-track"></div>
+    <button id="pk-next" class="pk-arrow pk-next" type="button" aria-label="Следующий">›</button>
+    <div class="pk-footer">
+      <div id="pk-dots" class="pk-dots" aria-hidden="true"></div>
+      <button id="pk-choose" class="pk-choose" type="button">Выбрать ♡</button>
+    </div>
+  </div>
   <script nonce="{{nonce}}" src="{{scriptUri}}"></script>
 </body>
 </html>

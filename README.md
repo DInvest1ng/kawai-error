@@ -1,7 +1,7 @@
 # Kawaii Error
 
 Расширение VS Code: когда в коде появляется новая ошибка, в нижней панели выпрыгивает
-аниме-девочка и вслух говорит «Хозяин, ошибка!» (или другую фразу из облачка).
+чиби-персонаж и говорит «Хозяин, ошибка!» (или другую фразу из облачка). Персонажа можно выбрать.
 
 Аватар — PNG-спрайты с прозрачным фоном (сгенерированы в Nano Banana). Голос — нейросетевой (Voicebox, Qwen3-TTS), склонирован по голосу из мема.
 Подставьте свои ассеты, как описано ниже.
@@ -19,6 +19,27 @@
 
 Если в терминале не срабатывает — проверьте, что работает shell integration: слева от выполненных
 команд должны появляться кружки (синий — успех, красный — ошибка).
+
+## Персонажи
+
+| Персонаж | Реплики | Голос |
+|----------|---------|-------|
+| **Нацуки** (по умолчанию) | «Хозяин, ошибка!» и др. | да |
+| **Курилов** | «Так, ошибка. Разбираемся.», «Кто это написал?!» и др.; на ошибки ещё и злится | нет, бипы |
+
+Сменить: кнопка 👤 в заголовке панели **Kawaii** (или розовая кнопка-сакура в правом верхнем углу
+самой панели, или **Command Palette → «Kawaii: Выбрать персонажа»**). Откроется карусель:
+листайте стрелками, клавишами ←/→ или колёсиком, **Enter** — выбрать, **Esc** — закрыть.
+Новый персонаж сразу поздоровается. Выбор хранится в настройке `kawaiiError.character`.
+
+Добавить своего встроенного персонажа — папка `media/characters/<id>/`:
+
+- `character.json`: `{ "name": "Имя", "phrases": ["…"], "testPhrase": "…", "errorEmotions": ["worried", "surprised", "angry"] }`
+  (`errorEmotions` необязателен, по умолчанию `worried` и `surprised`);
+- спрайты `idle` (обязателен — он же карточка в карусели), `talk`, `worried`, `surprised`, `happy`, `angry`;
+- необязательная озвучка `voice-<номер фразы>.wav` и `voice-test.wav`.
+
+Затем добавьте `<id>` в `enum` настройки `kawaiiError.character` в `package.json`.
 
 ## На что реагирует
 
@@ -45,7 +66,8 @@
 | `kawaiiError.cooldownSeconds` | `10` | Минимальная пауза между реакциями, с |
 | `kawaiiError.displayDuration` | `6` | Сколько секунд девочка на экране |
 | `kawaiiError.revealPanel` | `true` | Открывать панель Kawaii, если она скрыта (фокус остаётся в редакторе) |
-| `kawaiiError.phrases` | `[]` | Свои реплики; пусто — встроенные |
+| `kawaiiError.character` | `natsuki` | Персонаж: `natsuki` или `kurilov` |
+| `kawaiiError.phrases` | `[]` | Свои реплики; пусто — реплики персонажа |
 | `kawaiiError.detectors.diagnostics` | `true` | Детектор Problems |
 | `kawaiiError.detectors.tasks` | `true` | Детектор задач |
 | `kawaiiError.detectors.terminal` | `true` | Детектор терминала |
@@ -55,13 +77,13 @@
 | `kawaiiError.sound.enabled` | `true` | Звук |
 | `kawaiiError.sound.volume` | `70` | Громкость 0–100 |
 | `kawaiiError.sound.directory` | `""` | Папка со своими `.wav` |
-| `kawaiiError.sprites.directory` | `""` | Папка со своими спрайтами |
+| `kawaiiError.sprites.directory` | `""` | Папка со своими спрайтами для выбранного персонажа |
 
 ## Свои ассеты
 
 ### Спрайты
 
-Нужны пять картинок (`.png`, `.gif`, `.webp` или `.svg`; подойдёт и анимированный GIF):
+Картинки (`.png`, `.gif`, `.webp` или `.svg`; подойдёт и анимированный GIF):
 
 | Файл        | Когда показывается                          |
 |-------------|---------------------------------------------|
@@ -70,16 +92,18 @@
 | `worried`   | ошибка                                      |
 | `surprised` | ошибка / предупреждение                     |
 | `happy`     | тестовая реакция                            |
+| `angry`     | ошибка, если персонаж злится (`errorEmotions`) |
 
 Положите их в любую папку и укажите её в `kawaiiError.sprites.directory`
-(например `~/kawaii/sprites/worried.png`). Недостающие файлы берутся из встроенных `media/sprites/`.
-Можно и просто заменить файлы в `media/sprites/` перед сборкой `.vsix`.
+(например `~/kawaii/sprites/worried.png`): они заменят спрайты выбранного персонажа, недостающие
+берутся у него из `media/characters/<id>/`. Можно и просто заменить файлы там перед сборкой `.vsix`.
 
 ### Звуки
 
-См. [media/sounds/README.md](media/sounds/README.md): озвучка встроенных фраз `voice-0.wav`…`voice-5.wav`,
-`voice-test.wav` и запасные звуки `error*.wav`, `warning*.wav`, `test*.wav` (для своих фраз)
-в `media/sounds/` или в папке из `kawaiiError.sound.directory`.
+См. [media/sounds/README.md](media/sounds/README.md): озвучка фраз `voice-0.wav`…`voice-5.wav`,
+`voice-test.wav` лежит в папке персонажа (`media/characters/<id>/`), запасные звуки `error*.wav`,
+`warning*.wav`, `test*.wav` (для своих фраз и персонажей без голоса) — в `media/sounds/`.
+Папка из `kawaiiError.sound.directory` проверяется первой.
 
 Как играется звук:
 
@@ -119,9 +143,11 @@ src/
   detectors/            источники ошибок (diagnostics, task, terminal, debug)
   errorBus.ts           debounce + cooldown, без зависимости от vscode
   reaction.ts           выбор реплики, эмоции и звука
+  characters.ts         загрузка пакетов персонажей (media/characters/<id>/character.json)
   audio.ts              системный плеер
   waifuView.ts          WebviewViewProvider (CSP, asWebviewUri, postMessage)
-media/                  HTML/CSS/JS вебвью, спрайты, звуки
+media/                  HTML/CSS/JS вебвью (облачко, карусель), общие звуки
+media/characters/       пакеты персонажей: character.json, спрайты, озвучка
 scripts/gen-placeholder-wav.mjs   генератор звуков-плейсхолдеров
 ```
 

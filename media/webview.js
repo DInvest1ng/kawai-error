@@ -10,6 +10,13 @@
   const source = $('source');
   const count = $('count');
   const fx = $('fx');
+  const pickBtn = $('pick');
+  const picker = $('picker');
+  const track = $('pk-track');
+  const dots = $('pk-dots');
+  const prevBtn = /** @type {HTMLButtonElement} */ ($('pk-prev'));
+  const nextBtn = /** @type {HTMLButtonElement} */ ($('pk-next'));
+  const chooseBtn = /** @type {HTMLButtonElement} */ ($('pk-choose'));
 
   const APPEAR_MS = 480;
   const LEAVE_MS = 450;
@@ -27,8 +34,16 @@
   const SVG_NS = 'http://www.w3.org/2000/svg';
   const BURST = ['sakura', 'sakura', 'sakura', 'heart', 'heart', 'sparkle', 'sparkle'];
 
+  /** @typedef {{id: string, name: string, sprites: Record<string, string>}} CharacterCard */
   /** @type {Record<string, string>} */
   let sprites = {};
+  /** @type {CharacterCard[]} */
+  let characters = [];
+  let currentId = '';
+  /** Carousel position. */
+  let index = 0;
+  /** @type {number | undefined} */
+  let previewTimer;
   /** @type {number[]} */
   let timers = [];
   /** @type {number | undefined} */
@@ -169,13 +184,153 @@
     later(leave, Math.max(durationMs, appearDelay + Array.from(r.phrase).length * TYPE_MS + 1000));
   }
 
+  // ---- Character carousel ----
+
+  function isPickerOpen() {
+    return !picker.hidden;
+  }
+
+  function renderCarousel() {
+    track.replaceChildren();
+    dots.replaceChildren();
+    characters.forEach((c, i) => {
+      const card = document.createElement('div');
+      card.className = 'pk-card';
+      card.dataset.index = String(i);
+      const img = document.createElement('img');
+      img.className = 'pk-img';
+      img.alt = c.name;
+      img.src = c.sprites.idle || '';
+      const name = document.createElement('p');
+      name.className = 'pk-name';
+      name.textContent = c.name;
+      if (c.id === currentId) {
+        const badge = document.createElement('span');
+        badge.className = 'pk-badge';
+        badge.textContent = '♡ сейчас';
+        name.appendChild(badge);
+      }
+      card.append(img, name);
+      card.addEventListener('click', () => (i === index ? choose() : go(i)));
+      track.appendChild(card);
+
+      const dot = document.createElement('span');
+      dot.className = 'pk-dot';
+      dots.appendChild(dot);
+    });
+    layout();
+  }
+
+  /** Positions cards around the centered one and previews its happy face. */
+  function layout() {
+    Array.from(track.children).forEach((el, i) => {
+      const card = /** @type {HTMLElement} */ (el);
+      const offset = i - index;
+      card.style.setProperty('--offset', String(offset));
+      card.style.setProperty('--scale', offset === 0 ? '1' : '0.72');
+      card.style.setProperty('--alpha', offset === 0 ? '1' : '0.5');
+      card.classList.toggle('center', offset === 0);
+      card.classList.toggle('far', Math.abs(offset) > 1);
+      const img = /** @type {HTMLImageElement} */ (card.querySelector('.pk-img'));
+      img.src = characters[i].sprites.idle || '';
+    });
+    Array.from(dots.children).forEach((d, i) => d.classList.toggle('active', i === index));
+    prevBtn.disabled = index === 0;
+    nextBtn.disabled = index === characters.length - 1;
+    chooseBtn.textContent = characters[index]?.id === currentId ? 'Оставить ♡' : 'Выбрать ♡';
+
+    if (previewTimer !== undefined) {
+      clearTimeout(previewTimer);
+    }
+    previewTimer = window.setTimeout(() => {
+      const center = track.children[index]?.querySelector('.pk-img');
+      const happy = characters[index]?.sprites.happy;
+      if (center && happy && isPickerOpen()) {
+        /** @type {HTMLImageElement} */ (center).src = happy;
+      }
+    }, 600);
+  }
+
+  function go(/** @type {number} */ i) {
+    index = Math.max(0, Math.min(characters.length - 1, i));
+    layout();
+  }
+
+  function openPicker() {
+    if (characters.length === 0) {
+      return;
+    }
+    index = Math.max(0, characters.findIndex((c) => c.id === currentId));
+    picker.hidden = false;
+    renderCarousel();
+    chooseBtn.focus();
+  }
+
+  function closePicker() {
+    picker.hidden = true;
+    if (previewTimer !== undefined) {
+      clearTimeout(previewTimer);
+    }
+  }
+
+  function choose() {
+    const c = characters[index];
+    closePicker();
+    if (c) {
+      vscode.postMessage({ type: 'select', id: c.id });
+    }
+  }
+
+  pickBtn.addEventListener('click', openPicker);
+  $('pk-close').addEventListener('click', closePicker);
+  prevBtn.addEventListener('click', () => go(index - 1));
+  nextBtn.addEventListener('click', () => go(index + 1));
+  chooseBtn.addEventListener('click', choose);
+
+  window.addEventListener('keydown', (e) => {
+    if (!isPickerOpen()) {
+      return;
+    }
+    const keys = { ArrowLeft: () => go(index - 1), ArrowRight: () => go(index + 1), Enter: choose, Escape: closePicker };
+    const action = keys[/** @type {keyof typeof keys} */ (e.key)];
+    if (action) {
+      e.preventDefault();
+      action();
+    }
+  });
+
+  let wheelLock = 0;
+  picker.addEventListener(
+    'wheel',
+    (e) => {
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      const now = Date.now();
+      if (Math.abs(delta) < 15 || now < wheelLock) {
+        return;
+      }
+      wheelLock = now + 350;
+      go(index + Math.sign(delta));
+    },
+    { passive: true },
+  );
+
   window.addEventListener('message', (event) => {
     const msg = event.data;
     if (msg.type === 'init') {
-      sprites = msg.sprites;
-      setSprite('idle');
+      characters = msg.characters;
+      currentId = msg.current;
+      sprites = characters.find((c) => c.id === currentId)?.sprites ?? {};
+      pickBtn.hidden = characters.length < 2;
+      if (!stage.classList.contains('visible')) {
+        setSprite('idle');
+      }
+      if (isPickerOpen()) {
+        renderCarousel();
+      }
     } else if (msg.type === 'react') {
       react(msg.reaction, msg.durationMs);
+    } else if (msg.type === 'openPicker') {
+      openPicker();
     }
   });
 

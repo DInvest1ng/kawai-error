@@ -10,6 +10,7 @@
     "src/errorBus.ts",
     "src/reaction.ts",
     "src/types.ts",
-    "src/audio.ts"
+    "src/audio.ts",
+    "src/characters.ts"
   ]
 }
